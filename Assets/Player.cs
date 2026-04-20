@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,11 +11,12 @@ public class Player : MonoBehaviour
     // string - tekst "tekst" 
     // bool - zmienna logiczna true/false
 
+    public event Action InitializeEvent;
+
     [SerializeField] private float speed = 2;
     [SerializeField] private float lookSpeed = 100;
     [SerializeField] private float jumpForce = 10;
     [SerializeField] private float interactionRange = 10;
-    public int health = 5;
     [SerializeField]
     private bool isAlive;
     //ctrl + r + r - replace wszêdzie
@@ -25,22 +29,72 @@ public class Player : MonoBehaviour
     private Vector2 moveInput;
     private Vector2 lookInput;
     private Rigidbody rb;
+    [SerializeField] public BattleStatsConfig statsConfig;
+    public Health health;
+    public static Player Instance;
+    private bool initialized;
+
+    public void Attack(Player target)
+    {
+        AttackData attackData = new AttackData(statsConfig.Attack);
+        AttackData attackData2 = attackData;
+
+        attackData2.Damage = 20;
+        Vector3 direction = new Vector3(1, 0, 0);
+        int armor = target.statsConfig.Armor;
+        int Damage = DamgeCalculator.CalculateDamage(attackData, new DefenceData(armor, null));
+        target.health.TakeDamge(Damage);
+
+    }
+
+    [ContextMenu("Deal 1 damage")]
+    public void TestDamage()
+    {
+        health.TakeDamge(1);
+    }
 
 
+    public int CurrentHealth
+    {
+        get
+        {
+            return health.CurrentHealth;
+        }
+    }
+
+    private void Awake()
+    {
+        if(Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        health = new Health(statsConfig.Health);
+        Debug.Log(CurrentHealth);
         rb = GetComponent<Rigidbody>();
-        float someFloat = 2;
-        someFloat += health;
-        string text1 = "tekst 1";
-        string text2 = "tekst 2";
-        Debug.Log(text1 + health);
-
         isAlive = !isAlive;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        initialized = true;
+        InitializeEvent?.Invoke();
+    }
+
+    public void CallOrSubscribe(Action onInitialzed)
+    {
+        if(initialized)
+        {
+            onInitialzed();
+        }
+        else
+        {
+            InitializeEvent += onInitialzed;
+        }
     }
 
     // Update is called once per frame
@@ -92,9 +146,9 @@ public class Player : MonoBehaviour
     {
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
 
-        if (Physics.Raycast(ray, out RaycastHit hit,interactionRange))
+        if (Physics.Raycast(ray, out RaycastHit hit, interactionRange))
         {
-            if(hit.collider.TryGetComponent(out Interactable interactable))
+            if (hit.collider.TryGetComponent(out Interactable interactable))
             {
                 interactable.Interact();
             }

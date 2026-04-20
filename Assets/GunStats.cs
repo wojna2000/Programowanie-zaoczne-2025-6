@@ -3,9 +3,10 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "GunStats", menuName = "Scriptable Objects/GunStats")]
 public class GunStats : ScriptableObject
 {
-    public float FireRate;
+    [field: SerializeField] public float FireRate { get; private set; }
     public float ReloadTime;
     public float Damage;
     public string Name;
     public Sprite Icon;
+
 }
