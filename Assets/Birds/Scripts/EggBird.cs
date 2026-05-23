@@ -1,16 +1,25 @@
 using UnityEngine;
 
-public class EggBird : MonoBehaviour
+public class EggBird : Bird
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [SerializeField] GameObject egg;
+    [SerializeField] float eggSpeed;
+    Rigidbody rbBird;
+    bool activated = false;
     void Start()
     {
-        
+        rbBird = GetComponent<Rigidbody>();
     }
 
-    // Update is called once per frame
-    void Update()
+    public override void Activate()
     {
-        
+        if (activated) return;
+        Vector3 currentPosition = transform.position;
+        GameObject newEgg = Instantiate(egg);
+        Rigidbody rb = newEgg.GetComponent<Rigidbody>();
+        egg.transform.position = currentPosition + new Vector3(0f, -1f, 0f);
+        rb.AddForce(Vector3.down * eggSpeed, ForceMode.Impulse);
+        rbBird.AddForce(Vector3.up * eggSpeed, ForceMode.Impulse);
+        activated = true;
     }
 }
